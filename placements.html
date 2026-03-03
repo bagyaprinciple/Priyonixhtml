@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placements & Alumni Success - Priyonix</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script src="https://unpkg.com/split-type"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            glow: '#A855F7',
+                            dark: '#050505',
+                            card: '#111111',
+                            border: '#222222',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --scroll: 0;
+            --mouse-x: 0;
+            --mouse-y: 0;
+            --progress: 0;
+        }
+
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            cursor: none;
+        }
+
+        .px-layer {
+            will-change: transform;
+            transform: translateY(calc(var(--scroll) * var(--speed, 0.5px)));
+        }
+
+        .px-mouse {
+            will-change: transform;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translate(calc(var(--mouse-x) * var(--depth, -30px)), calc(var(--mouse-y) * var(--depth, -30px)));
+        }
+
+        .glass-nav {
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #34d399, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glow-button {
+            position: relative;
+            background: #ffffff;
+            color: #000000;
+            isolation: isolate;
+        }
+
+        .glow-button::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(90deg, #A855F7, #EC4899, #3B82F6);
+            opacity: 0;
+            z-index: -1;
+            border-radius: 9999px;
+            transition: opacity 0.3s;
+            filter: blur(12px);
+        }
+
+        .glow-button:hover::after {
+            opacity: 0.8;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(60px) scale(0.95);
+            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .split-text {
+            opacity: 0;
+        }
+
+        .split-text .word {
+            overflow: hidden;
+            padding-bottom: 0.1em;
+        }
+
+        .split-text .char {
+            opacity: 0;
+            transform: translateY(100%);
+            will-change: transform, opacity;
+        }
+
+        .magnetic-wrap {
+            display: inline-block;
+            position: relative;
+        }
+
+        .bg-grid {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+            mix-blend-mode: overlay;
+        }
+
+        #custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: white;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1), height 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            will-change: transform;
+        }
+
+        #custom-cursor.hover {
+            width: 60px;
+            height: 60px;
+        }
+
+
+        .stat-value {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+
+<body class="selection:bg-emerald-500/30 selection:text-white">
+
+
+    <div id="custom-cursor"></div>
+
+
+    <div class="film-grain">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; opacity: 1;">
+            <filter id="noiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+        </svg>
+    </div>
+
+
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div id="particle-canvas" class="fixed inset-0 pointer-events-none z-[-2]"></div>
+        <div class="absolute inset-0 bg-grid px-layer" style="--speed: 0.2px"></div>
+
+        <div class="px-mouse absolute top-[20%] right-[20%] w-[800px] h-[800px] bg-emerald-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50"
+            style="--depth: -50px;"></div>
+        <div class="px-mouse absolute bottom-[10%] left-[10%] w-[600px] h-[600px] bg-teal-600/10 rounded-full blur-[100px] mix-blend-screen opacity-40 animate-blob"
+            style="--depth: -30px;"></div>
+    </div>
+
+
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg   flex items-center justify-center font-bold text-white ">
+                    <img src="./logo.png" />
+                </div>
+                <span class="font-bold text-lg tracking-tight hover:text-white transition-colors">Priyonix</span>
+            </a>
+
+            <div class="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-400">
+                <a href="about.html" class="hover:text-white transition-colors">About Us</a>
+                <a href="itcourses.html" class="hover:text-white transition-colors">IT Courses</a>
+                <a href="nonitcourses.html" class="hover:text-white transition-colors">Non-IT</a>
+                <a href="enterprise.html" class="hover:text-white transition-colors">Enterprise</a>
+                <a href="development.html" class="hover:text-white transition-colors">IT Services</a>
+                <a href="placements.html"
+                    class="text-white font-semibold flex flex-col relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-white after:rounded-full">Placements</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="magnetic-wrap">
+                    <button data-magnetic onclick="window.location.href='index.html#courses'"
+                        class="glow-button px-5 py-2 rounded-full text-sm font-semibold transition-transform flex items-center gap-2">
+                        Get Placed <span class="opacity-50 ml-1">→</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <button id="mobile-menu-btn" class="lg:hidden text-white p-2 z-[60] relative" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path id="mobile-icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+
+    <div id="mobile-menu"
+        class="fixed inset-0 bg-[#050505]/95 backdrop-blur-xl z-[55] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="flex flex-col items-center gap-8 text-2xl font-bold text-gray-300">
+            <a href="about.html" class="hover:text-white transition-colors mobile-link">About Us</a>
+            <a href="itcourses.html" class="hover:text-white transition-colors mobile-link">IT Courses</a>
+            <a href="nonitcourses.html" class="hover:text-white transition-colors mobile-link">Non-IT</a>
+            <a href="enterprise.html" class="hover:text-white transition-colors mobile-link">Enterprise B2B</a>
+            <a href="development.html" class="hover:text-white transition-colors mobile-link">IT Services</a>
+            <a href="placements.html" class="hover:text-white transition-colors mobile-link">Placements</a>
+        </div>
+    </div>
+
+
+    <main>
+
+        <section class="relative h-[80vh] flex flex-col items-center justify-center px-4" id="placements-hero">
+            <div class="relative z-10 text-center max-w-5xl mx-auto flex flex-col items-center">
+
+                <h1 id="hero-title"
+                    class="text-6xl md:text-8xl font-bold tracking-tighter leading-[1.05] mb-8 relative px-layer"
+                    style="--speed: -0.2px">
+                    <div class="overflow-hidden pb-2">
+                        <div class="hero-line translate-y-full opacity-0">Hired by</div>
+                    </div>
+                    <div class="overflow-hidden pb-4">
+                        <div class="hero-line translate-y-full opacity-0 text-gradient mt-4">The Best.</div>
+                    </div>
+                </h1>
+
+                <p id="hero-text"
+                    class="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light px-layer opacity-0 translate-y-4"
+                    style="--speed: -0.3px">
+                    Our alumni don't just get jobs; they define the technical standards at top-tier Fortune 500
+                    companies and hyper-growth startups globally.
+                </p>
+
+                <div id="hero-scroll" class="opacity-0 mt-8 px-layer" style="--speed: -0.5px">
+                    <div class="w-[1px] h-16 bg-gradient-to-b from-white/50 to-transparent mx-auto"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="max-w-7xl mx-auto px-6 py-20 relative z-10 border-t border-white/5">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12" id="stats-container">
+
+
+                <div class="text-center reveal">
+                    <h2 class="text-5xl md:text-7xl font-bold text-white mb-2 flex justify-center items-center">
+                        <span class="stat-value" data-target="95">0</span><span
+                            class="text-3xl md:text-5xl text-emerald-500">%</span>
+                    </h2>
+                    <p class="text-sm font-medium text-gray-400 tracking-widest uppercase">Placement Rate</p>
+                </div>
+
+
+                <div class="text-center reveal delay-100">
+                    <h2 class="text-5xl md:text-7xl font-bold text-white mb-2 flex justify-center items-center">
+                        <span class="stat-value" data-target="500">0</span><span
+                            class="text-3xl md:text-5xl text-emerald-500">+</span>
+                    </h2>
+                    <p class="text-sm font-medium text-gray-400 tracking-widest uppercase">Hiring Partners</p>
+                </div>
+
+
+                <div class="text-center reveal delay-200">
+                    <h2 class="text-5xl md:text-7xl font-bold text-white mb-2 flex justify-center items-center">
+                        <span class="text-3xl md:text-5xl text-emerald-500">₹</span><span class="stat-value"
+                            data-target="12">0</span><span class="text-3xl md:text-5xl text-white">L</span>
+                    </h2>
+                    <p class="text-sm font-medium text-gray-400 tracking-widest uppercase">Average CTC</p>
+                </div>
+
+
+                <div class="text-center reveal delay-300">
+                    <h2 class="text-5xl md:text-7xl font-bold text-white mb-2 flex justify-center items-center">
+                        <span class="stat-value" data-target="3">0</span><span
+                            class="text-3xl md:text-5xl text-emerald-500">x</span>
+                    </h2>
+                    <p class="text-sm font-medium text-gray-400 tracking-widest uppercase">Salary Hike</p>
+                </div>
+
+            </div>
+        </section>
+
+
+
+
+
+
+        <section class="py-40 relative flex items-center justify-center overflow-hidden" id="cta-section">
+            <div class="whitespace-nowrap flex">
+                <h2 id="cta-text"
+                    class="text-[12vw] font-black tracking-tighter leading-none text-white/5 select-none pr-8">
+                    YOUR SUCCESS STORY <span class="text-emerald-500/10">✦</span> YOUR SUCCESS STORY <span
+                        class="text-emerald-500/10">✦</span> YOUR SUCCESS STORY <span
+                        class="text-emerald-500/10">✦</span>
+                </h2>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center px-layer" style="--speed: -0.2px">
+                <div class="max-w-xl text-center px-4 reveal">
+                    <p class="text-2xl md:text-3xl font-medium leading-normal mb-8">Ready to add your name to the list?
+                    </p>
+                    <div class="magnetic-wrap">
+                        <a href="index.html#courses"
+                            class="glow-button inline-block px-8 py-4 rounded-full text-base font-bold transition-transform hover:scale-105 active:scale-95 bg-white text-black border border-white/20 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                            Browse Programs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-brand-border bg-brand-dark pt-20 pb-10">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Explore</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="about.html" class="hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="itcourses.html" class="hover:text-white transition-colors">IT Courses</a></li>
+                    <li><a href="nonitcourses.html" class="hover:text-white transition-colors">Non-IT Courses</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Corporate</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="enterprise.html" class="hover:text-white transition-colors">Enterprise Training</a>
+                    </li>
+                    <li><a href="development.html" class="hover:text-white transition-colors">Software Development</a>
+                    </li>
+                    <li><a href="placements.html" class="hover:text-white transition-colors">Placements & Hiring</a>
+                    </li>
+                    <li><a href="mailto:Info@priyonix.com" class="hover:text-white transition-colors">Contact
+                            Sales</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Legal</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Statement</a></li>
+                    <li><a href="terms.html" class="hover:text-white transition-colors">Terms & Conditions</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Contact</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:info@priyonix.com"
+                            class="hover:text-white transition-colors flex items-center gap-2 "> <span
+                                class="material-symbols-outlined text-white text-sm">mail</span>
+                            info@priyonix.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:hr@priyonix.com"
+                            class="hover:text-white transition-colors flex items-center gap-2 "> <span
+                                class="material-symbols-outlined text-white text-sm">mail</span>
+                            hr@priyonix.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-center gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">phone</span>
+                            +91 7070070753</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-center gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">phone</span>
+                            +91 7070070758</a>
+                    </li>
+                    <li class="flex items-start gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-start gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">location_on</span>
+                            <span> Priyonix Global Ventures PVT. LTD. <br />
+                                Sakthi Mansion, <br />
+                                Door No:121, Plot No.74, <br />
+                                Arulananda Ammal Nagar 5th Street, <br />
+                                Don Bosco School Main Road, <br />
+                                Thanjavur - 613007</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-white/5 text-center text-xs text-gray-600">
+            © 2026 PRIYONIX GLOBAL VENTURES PRIVATE LIMITED. All rights reserved.
+        </div>
+    </footer>
+    <script>
+        const lenis = new Lenis({ duration: 1.5, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), direction: 'vertical', gestureDirection: 'vertical', smooth: true });
+
+        let scrollY = 0, documentHeight = document.documentElement.scrollHeight - window.innerHeight, pMouseX = 0, pMouseY = 0, mouseX = 0, mouseY = 0;
+        const root = document.documentElement;
+        const lerp = (start, end, factor) => start + (end - start) * factor;
+
+        const cursor = document.getElementById('custom-cursor');
+        const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        const mouse = { x: pos.x, y: pos.y };
+        const speed = 0.35;
+        const xSet = gsap.quickSetter(cursor, "x", "px");
+        const ySet = gsap.quickSetter(cursor, "y", "px");
+
+        gsap.ticker.add(() => {
+            const dt = 1.0 - Math.pow(1.0 - speed, gsap.ticker.deltaRatio());
+            pos.x += (mouse.x - pos.x) * dt;
+            pos.y += (mouse.y - pos.y) * dt;
+            xSet(pos.x);
+            ySet(pos.y);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX; mouse.y = e.clientY;
+            pMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            pMouseY = (e.clientY / window.innerHeight) * 2 - 1;
+        });
+
+        document.querySelectorAll('a, button, [data-magnetic]').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        window.addEventListener('resize', () => { documentHeight = document.documentElement.scrollHeight - window.innerHeight; });
+        gsap.registerPlugin(ScrollTrigger);
+        const counters = document.querySelectorAll('.stat-value');
+        let played = false;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    if (entry.target.id === 'stats-container' && !played) {
+                        played = true;
+                        counters.forEach(counter => {
+                            const target = +counter.getAttribute('data-target');
+                            gsap.to(counter, {
+                                innerHTML: target,
+                                duration: 2.5,
+                                snap: { innerHTML: 1 },
+                                ease: "power3.out"
+                            });
+                        });
+                    }
+                }
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        observer.observe(document.getElementById('stats-container'));
+
+        const nav = document.querySelector('nav');
+
+        document.querySelectorAll('[data-magnetic]').forEach((el) => {
+            const wrap = el.closest('.magnetic-wrap');
+            wrap.addEventListener('mousemove', (e) => {
+                const rect = wrap.getBoundingClientRect();
+                const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+                const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                gsap.to(el, { x: x * 20, y: y * 20, duration: 0.4, ease: "power3.out" });
+            });
+            wrap.addEventListener('mouseleave', () => {
+                gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.3)" });
+            });
+        });
+        const initHero = () => {
+            const tl = gsap.timeline({ delay: 0.2 });
+            tl.to(document.querySelector('nav'), { yPercent: 0, duration: 1, ease: "power3.out" }, 0)
+                .to(document.getElementById('hero-badge'), { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.5)" }, 0.4)
+                .to(document.querySelectorAll('.hero-line'), { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "expo.out" }, 0.6)
+                .to(document.getElementById('hero-text'), { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 1.0)
+                .to(document.getElementById('hero-scroll'), { opacity: 1, duration: 1, ease: "power2.inOut" }, 1.2);
+        };
+        gsap.set('nav', { yPercent: -100 });
+        initHero();
+        gsap.to('#cta-text', {
+            xPercent: -40, ease: "none",
+            scrollTrigger: { trigger: "#cta-section", start: "top bottom", end: "bottom top", scrub: 1 }
+        });
+        setTimeout(() => {
+            document.querySelectorAll('.split-text').forEach(quote => {
+                const split = new SplitType(quote, { types: 'words, chars' });
+                gsap.set(quote, { opacity: 1 });
+                gsap.fromTo(split.chars, { yPercent: 100, opacity: 0 }, {
+                    yPercent: 0, opacity: 1, duration: 0.8, stagger: 0.02, ease: "back.out(1.2)",
+                    scrollTrigger: { trigger: quote, start: "top 90%", toggleActions: "play none none reverse" }
+                });
+            });
+        }, 100);
+        function raf(time) {
+            lenis.raf(time);
+            scrollY = lenis.scroll;
+            const scrollProgress = documentHeight > 0 ? scrollY / documentHeight : 0;
+            mouseX = lerp(mouseX, pMouseX, 0.04); mouseY = lerp(mouseY, pMouseY, 0.04);
+            root.style.setProperty('--scroll', scrollY); root.style.setProperty('--progress', scrollProgress);
+            root.style.setProperty('--mouse-x', mouseX); root.style.setProperty('--mouse-y', mouseY);
+
+            nav.style.backgroundColor = scrollY > 50 ? 'rgba(5, 5, 5, 0.8)' : 'rgba(5, 5, 5, 0)';
+
+            if (camera && particles) {
+                camera.position.z = -scrollProgress * TUNNEL_LENGTH;
+                particles.rotation.z = scrollProgress * Math.PI;
+                const rawVelocity = Math.abs(lenis.velocity || 0);
+                const targetScaleZ = Math.min(Math.max(1 + (rawVelocity * 0.5), 1), 40);
+                particleScaleZ = targetScaleZ > particleScaleZ ? targetScaleZ : lerp(particleScaleZ, 1, 0.1);
+                particles.scale.z = particleScaleZ;
+                renderer.render(scene, camera);
+            }
+            requestAnimationFrame(raf);
+        }
+        let scene, camera, renderer, particles, particleScaleZ = 1;
+        const TUNNEL_LENGTH = 3000, TUNNEL_RADIUS = 200;
+        function initWebGLParticles() {
+            const container = document.getElementById('particle-canvas');
+            if (!container) return;
+            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x050505, 0.001);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000); camera.position.z = 0;
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); container.appendChild(renderer.domElement);
+            const geometry = new THREE.BufferGeometry(), positions = new Float32Array(6000 * 3), sizes = new Float32Array(6000);
+            for (let i = 0; i < 6000; i++) {
+                const theta = Math.random() * Math.PI * 2, r = 30 + Math.pow(Math.random(), 0.5) * TUNNEL_RADIUS;
+                positions[i * 3] = r * Math.cos(theta); positions[i * 3 + 1] = r * Math.sin(theta); positions[i * 3 + 2] = 100 - (Math.random() * 4000);
+                sizes[i] = Math.random() * 2;
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            const canvas = document.createElement('canvas'); canvas.width = 16; canvas.height = 16; const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.5, 'rgba(16,185,129,0.5)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, 16, 16);
+            particles = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1.5, map: new THREE.CanvasTexture(canvas), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xffffff }));
+            scene.add(particles);
+            window.addEventListener('resize', () => { if (camera && renderer) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
+        }
+        initWebGLParticles(); requestAnimationFrame(raf);
+    </script>
+
+    <script>
+        (function () {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-icon-path');
+            let isOpen = false;
+
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        menu.classList.remove('opacity-0', 'pointer-events-none');
+                        menu.classList.add('opacity-100', 'pointer-events-auto');
+                        icon.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        menu.classList.remove('opacity-100', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'pointer-events-none');
+                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        document.body.style.overflow = '';
+                    }
+                });
+
+                document.querySelectorAll('.mobile-link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        isOpen = false;
+                        menu.classList.remove('opacity-100', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'pointer-events-none');
+                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        document.body.style.overflow = '';
+                    });
+                });
+            }
+        })();
+    </script>
+
+</body>
+
+</html>

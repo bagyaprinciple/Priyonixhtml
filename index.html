@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priyonix</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script src="https://unpkg.com/split-type"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            glow: '#A855F7',
+                            dark: '#050505',
+                            card: '#111111',
+                            border: '#222222',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --scroll: 0;
+            --mouse-x: 0;
+            --mouse-y: 0;
+            --progress: 0;
+        }
+
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            cursor: none;
+
+        }
+
+
+
+
+        .px-layer {
+            will-change: transform;
+            transform: translateY(calc(var(--scroll) * var(--speed, 0.5px)));
+        }
+
+
+        .px-layer-x {
+            will-change: transform;
+            transform: translateX(calc(var(--scroll) * var(--speed-x, -0.5px)));
+        }
+
+
+        .px-mouse {
+            will-change: transform;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translate(calc(var(--mouse-x) * var(--depth, -30px)),
+                    calc(var(--mouse-y) * var(--depth, -30px)));
+        }
+
+
+        .px-scrub {
+            will-change: transform, opacity;
+
+        }
+
+
+        .px-expand {
+            will-change: transform;
+            transform: translate(calc(var(--feature-offset, 0) * var(--expand-x, 0) * 1px),
+                    calc(var(--feature-offset, 0) * var(--expand-y, 0) * 1px)) scale(calc(1 + (var(--feature-offset-abs, 0) * var(--expand-scale, 0)))) rotate(calc(var(--feature-offset, 0) * var(--expand-r, 0) * 1deg));
+        }
+
+
+        .glass-nav {
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-glow {
+            background: radial-gradient(circle at center, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #ffffff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glow-button {
+            position: relative;
+            background: #ffffff;
+            color: #000000;
+            isolation: isolate;
+        }
+
+
+        .glow-button::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(90deg, #A855F7, #EC4899, #3B82F6);
+            opacity: 0;
+            z-index: -1;
+            border-radius: 9999px;
+            transition: opacity 0.3s;
+            filter: blur(12px);
+        }
+
+        .glow-button:hover::after {
+            opacity: 0.8;
+        }
+
+        .mockup-window {
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 60px -10px rgba(0, 0, 0, 0.8);
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(60px) scale(0.95);
+            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+
+        .split-text {
+
+            opacity: 0;
+        }
+
+
+        .split-text .word {
+            overflow: hidden;
+            padding-bottom: 0.1em;
+
+        }
+
+        .split-text .char {
+            opacity: 0;
+            transform: translateY(100%);
+            will-change: transform, opacity;
+        }
+
+
+        .magnetic-wrap {
+            display: inline-block;
+            position: relative;
+        }
+
+
+        .bg-grid {
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+
+
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+
+            mix-blend-mode: overlay;
+        }
+
+
+        #custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: white;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1), height 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            will-change: transform;
+        }
+
+        #custom-cursor.hover {
+            width: 60px;
+            height: 60px;
+        }
+    </style>
+</head>
+
+<body class="selection:bg-brand-glow selection:text-white">
+
+
+    <div id="custom-cursor"></div>
+
+
+    <div class="film-grain">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; opacity: 1;">
+            <filter id="noiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+        </svg>
+    </div>
+
+
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+
+
+        <div id="particle-canvas" class="fixed inset-0 pointer-events-none z-[-2]"></div>
+
+
+        <div class="absolute inset-0 bg-grid px-layer" style="--speed: 0.2px"></div>
+
+
+        <div class="px-mouse absolute top-[10%] left-[20%] w-[800px] h-[800px] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen opacity-50"
+            style="--depth: -60px;"></div>
+        <div class="px-mouse absolute bottom-[20%] right-[10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[100px] mix-blend-screen opacity-40 animate-blob delay-2000"
+            style="--depth: -30px;"></div>
+    </div>
+
+
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg   flex items-center justify-center font-bold text-white ">
+                    <img src="./logo.png" />
+                </div>
+                <span class="font-bold text-lg tracking-tight hover:text-white transition-colors">Priyonix</span>
+            </a>
+
+            <div class="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-400">
+                <a href="about.html" class="hover:text-white transition-colors">About Us</a>
+                <a href="itcourses.html" class="hover:text-white transition-colors flex items-center gap-1">
+                    IT Courses <span
+                        class="px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-white leading-none">HOT</span>
+                </a>
+                <a href="nonitcourses.html" class="hover:text-white transition-colors">Non-IT</a>
+                <a href="enterprise.html" class="hover:text-white transition-colors">Enterprise</a>
+                <a href="development.html" class="hover:text-white transition-colors">IT Services</a>
+                <a href="placements.html" class="hover:text-white transition-colors">Placements</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="#"
+                    class="text-sm font-medium text-gray-300 hover:text-white transition-colors hidden sm:block">Apply
+                    Now</a>
+                <div class="magnetic-wrap">
+                    <button data-magnetic onclick="window.location.href='index.html#courses'"
+                        class="glow-button px-5 py-2 rounded-full text-sm font-semibold transition-transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                        View Courses <span class="opacity-50 ml-1">→</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <button id="mobile-menu-btn" class="lg:hidden text-white p-2 z-[60] relative" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path id="mobile-icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+
+    <div id="mobile-menu"
+        class="fixed inset-0 bg-[#050505]/95 backdrop-blur-xl z-[55] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="flex flex-col items-center gap-8 text-2xl font-bold text-gray-300">
+            <a href="about.html" class="hover:text-white transition-colors mobile-link">About Us</a>
+            <a href="itcourses.html" class="hover:text-white transition-colors mobile-link">IT Courses</a>
+            <a href="nonitcourses.html" class="hover:text-white transition-colors mobile-link">Non-IT</a>
+            <a href="enterprise.html" class="hover:text-white transition-colors mobile-link">Enterprise B2B</a>
+            <a href="development.html" class="hover:text-white transition-colors mobile-link">IT Services</a>
+            <a href="placements.html" class="hover:text-white transition-colors mobile-link">Placements</a>
+        </div>
+    </div>
+
+
+    <main>
+
+        <section class="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-4"
+            id="hero-section">
+
+            <div class="absolute inset-0 hero-glow px-layer pointer-events-none" style="--speed: 0.1px"></div>
+
+            <div class="relative z-10 text-center max-w-4xl mx-auto flex flex-col items-center">
+
+                <h1 id="hero-title"
+                    class="text-6xl md:text-8xl font-bold tracking-tighter leading-[1.05] mb-8 relative px-layer"
+                    style="--speed: -0.2px">
+                    <div class="overflow-hidden pb-2">
+                        <div class="hero-line translate-y-full opacity-0">Future-Ready</div>
+                    </div>
+                    <div class="overflow-hidden pb-4">
+                        <div class="hero-line translate-y-full opacity-0"><span
+                                class="text-gradient inline-block min-w-[300px] text-center" id="hero-rotator">Tech
+                                Talent.</span></div>
+                    </div>
+                </h1>
+
+                <p id="hero-text"
+                    class="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light px-layer opacity-0 translate-y-4"
+                    style="--speed: -0.3px">
+                    Harnessing technology and human ingenuity to help our clients and people thrive in a digital-first
+                    world.
+                </p>
+
+                <div id="hero-buttons" class="flex flex-col sm:flex-row items-center gap-4 px-layer opacity-0 scale-95"
+                    style="--speed: -0.4px">
+                    <div class="magnetic-wrap w-full sm:w-auto">
+                        <button data-magnetic
+                            class="glow-button w-full sm:w-auto px-8 py-4 rounded-full text-base font-semibold transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                            Explore Programs
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="w-full max-w-6xl mx-auto mt-20 relative z-20 px-layer reveal delay-200" style="--speed: -0.6px">
+                <div
+                    class="mockup-window rounded-2xl overflow-hidden aspect-[16/9] border border-white/10 relative group">
+
+                    <div
+                        class="absolute top-0 w-full h-12 bg-white/5 border-b border-white/10 flex items-center px-4 gap-2 z-10">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        <div
+                            class="mx-auto flex items-center gap-2 px-3 py-1 bg-black/40 rounded-md border border-white/5 text-xs text-gray-500 font-mono">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z">
+                                </path>
+                            </svg>
+                            priyonix.ai/design
+                        </div>
+                    </div>
+
+                    <div class="w-full h-full pt-12 p-8 grid grid-cols-12 gap-6 bg-[#0a0a0a]">
+
+                        <div class="col-span-3 border-r border-white/10 flex flex-col gap-4 pr-6">
+                            <div class="w-full h-8 rounded bg-white/5 animate-pulse"></div>
+                            <div class="w-3/4 h-4 rounded bg-white/5 mt-4"></div>
+                            <div class="w-1/2 h-4 rounded bg-white/5"></div>
+                            <div
+                                class="w-full h-32 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 mt-8 flex flex-col items-center justify-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-white/10"></div>
+                                <div class="w-1/2 h-2 rounded bg-white/20"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-9 flex flex-col gap-6">
+                            <div
+                                class="w-full h-12 rounded-xl border border-white/10 bg-white/5 flex items-center px-4">
+                                <div class="w-2 h-2 rounded-full bg-purple-500 mr-3 animate-pulse"></div>
+                                <div class="w-1/3 h-4 rounded bg-white/20"></div>
+                            </div>
+                            <div
+                                class="flex-1 rounded-xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
+                                    class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay" />
+                                <div
+                                    class="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
+                                    <h2 class="text-4xl font-bold mb-4 font-serif italic text-white/90">Elegant Design
+                                    </h2>
+                                    <p class="w-2/3 h-2 rounded bg-white/40 mb-2"></p>
+                                    <p class="w-1/2 h-2 rounded bg-white/20"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute -right-8 top-1/3 p-4 rounded-xl bg-brand-card border border-white/10 shadow-2xl z-30 px-layer hidden lg:flex flex-col gap-3"
+                        style="--speed: -1.2px">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-8 h-8 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-white">Generation Complete</p>
+                                <p class="text-[10px] text-gray-400">Deployed in 2.4s</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="py-12 border-y border-white/10 bg-white/5 relative overflow-hidden">
+            <div class="absolute inset-0 hero-glow opacity-30"></div>
+
+            <div class="flex whitespace-nowrap px-layer-x gap-8 font-bold text-5xl md:text-7xl uppercase tracking-tighter text-transparent"
+                style="-webkit-text-stroke: 1px rgba(255,255,255,0.15); --speed-x: -0.6px; width: max-content;">
+                <span>Learn</span> • <span>Build</span> • <span>Thrive</span> •
+                <span>Learn</span> • <span>Build</span> • <span>Thrive</span> •
+                <span>Learn</span> • <span>Build</span> • <span>Thrive</span>
+            </div>
+        </section>
+
+
+        <section class="py-32 px-4 relative">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center max-w-2xl mx-auto mb-20 reveal">
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-6">Designed for speed. <br />Built for
+                        scale.</h2>
+                    <p class="text-gray-400 text-lg">Every element is generated with clean, optimized code. Your website
+                        isn't just a picture; it's production-ready.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="feature-grid">
+
+
+                    <div class="px-expand h-full"
+                        style="--expand-x: 0.15; --expand-y: 0.1; --expand-scale: -0.0001; --expand-r: -0.02">
+                        <div
+                            class="h-full group relative rounded-2xl bg-brand-card border border-brand-border p-8 overflow-hidden reveal hover:border-white/30 transition-colors">
+                            <div
+                                class="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-colors">
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-2xl">
+                                💻</div>
+                            <h3 class="text-xl font-bold mb-3">Web Development</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">Master the modern stack. From frontend
+                                frameworks to robust backend architecture, build the web of tomorrow.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="px-expand h-full" style="--expand-y: 0.15; --expand-scale: -0.0002">
+                        <div class="h-full group relative rounded-2xl bg-brand-card border border-brand-border p-8 overflow-hidden reveal hover:border-white/30 transition-colors"
+                            style="transition-delay: 100ms">
+                            <div
+                                class="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-colors">
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-2xl">
+                                🧠</div>
+                            <h3 class="text-xl font-bold mb-3">AI & Machine Learning</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">Dive deep into data. Learn to train models,
+                                build neural networks, and deploy intelligent agents.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="px-expand h-full"
+                        style="--expand-x: -0.15; --expand-y: 0.1; --expand-scale: -0.0001; --expand-r: 0.02">
+                        <div class="h-full group relative rounded-2xl bg-brand-card border border-brand-border p-8 overflow-hidden reveal hover:border-white/30 transition-colors"
+                            style="transition-delay: 200ms">
+                            <div
+                                class="absolute top-0 right-0 w-64 h-64 bg-pink-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-pink-500/20 transition-colors">
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-2xl">
+                                📈</div>
+                            <h3 class="text-xl font-bold mb-3">Digital Marketing</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">Master SEO, performance marketing, and
+                                branding to drive growth in a digital-first world.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="px-expand h-full"
+                        style="--expand-x: 0.15; --expand-y: -0.1; --expand-scale: -0.0001; --expand-r: 0.02">
+                        <div
+                            class="h-full group relative rounded-2xl bg-brand-card border border-brand-border p-8 overflow-hidden reveal hover:border-white/30 transition-colors">
+                            <div
+                                class="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-green-500/20 transition-colors">
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-2xl">
+                                📦</div>
+                            <h3 class="text-xl font-bold mb-3">Logistics Management</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">Learn end-to-end supply chain optimization
+                                and operations using modern software tools.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="px-expand h-full" style="--expand-y: -0.15; --expand-scale: -0.0002">
+                        <div class="h-full group relative rounded-2xl bg-brand-card border border-brand-border p-8 overflow-hidden reveal hover:border-white/30 transition-colors"
+                            style="transition-delay: 100ms">
+                            <div
+                                class="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-yellow-500/20 transition-colors">
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-2xl">
+                                🤝</div>
+                            <h3 class="text-xl font-bold mb-3">Hiring & Placement</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">We don't just train. Our dedicated HR team
+                                ensures 100% placement assistance for our graduates.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="px-expand h-full"
+                        style="--expand-x: -0.15; --expand-y: -0.1; --expand-scale: -0.0001; --expand-r: -0.02">
+                        <div class="h-full group relative rounded-2xl bg-brand-card border border-brand-border p-8 overflow-hidden reveal hover:border-white/30 transition-colors"
+                            style="transition-delay: 200ms">
+                            <div
+                                class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/20 transition-colors">
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-2xl">
+                                🏆</div>
+                            <h3 class="text-xl font-bold mb-3">Global Recognition</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">Awarded as a Leader in Reinvention and a
+                                Great Place to Work by trusted industry leaders.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <section
+                class="py-32 px-4 relative overflow-hidden border-t border-white/5 bg-gradient-to-b from-brand-dark to-black"
+                id="courses">
+                <div class="max-w-5xl mx-auto relative z-10 flex flex-col gap-24 items-center">
+
+
+                    <div class="w-full flex flex-col pt-4">
+                        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 reveal">
+                            <div class="max-w-2xl">
+                                <div
+                                    class="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-semibold text-purple-300 uppercase tracking-widest reveal">
+                                    Course Directory
+                                </div>
+                                <h2 class="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] reveal">Pick
+                                    your path to
+                                    a<br /><span
+                                        class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">successful
+                                        career.</span></h2>
+                            </div>
+                        </div>
+                        <div class="magnetic-wrap shrink-0 self-end mb-8 reveal hidden lg:block">
+                            <button data-magnetic
+                                class="px-6 py-3 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm font-semibold flex items-center gap-2">
+                                View All Programs <span class="opacity-50">→</span>
+                            </button>
+                        </div>
+
+                        <div class="grid gap-2 relative">
+
+                            <div
+                                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none">
+                            </div>
+
+
+                            <div class="course-card-wrap opacity-0 translate-y-20">
+                                <a href="#"
+                                    class="group relative bg-white/[0.02] border border-white/5 hover:border-white/20 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-500 hover:bg-white/[0.04]">
+                                    <div class="flex items-center gap-6">
+                                        <div
+                                            class="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">
+                                            💻
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-2xl font-bold mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 transition-all duration-300">
+                                                Web Development</h3>
+                                            <p class="text-gray-400 text-sm">Frontend · Backend · Full Stack
+                                                Architecture
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 shrink-0">
+                                        <span
+                                            class="text-xs font-medium px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 group-hover:bg-white/10">6
+                                            Months</span>
+                                        <div
+                                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                            <span
+                                                class="group-hover:translate-x-1 transition-transform font-bold">→</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+
+                            <div class="course-card-wrap opacity-0 translate-y-20">
+                                <a href="#"
+                                    class="group relative bg-white/[0.02] border border-white/5 hover:border-white/20 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-500 hover:bg-white/[0.04]">
+                                    <div class="flex items-center gap-6">
+                                        <div
+                                            class="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">
+                                            🧠
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-2xl font-bold mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-300">
+                                                AI & Machine Learning</h3>
+                                            <p class="text-gray-400 text-sm">Data Science · Neural Networks · LLMs</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 shrink-0">
+                                        <span
+                                            class="text-xs font-medium px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 group-hover:bg-white/10">8
+                                            Months</span>
+                                        <div
+                                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                            <span
+                                                class="group-hover:translate-x-1 transition-transform font-bold">→</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+
+                            <div class="course-card-wrap opacity-0 translate-y-20">
+                                <a href="#"
+                                    class="group relative bg-white/[0.02] border border-white/5 hover:border-white/20 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-500 hover:bg-white/[0.04]">
+                                    <div class="flex items-center gap-6">
+                                        <div
+                                            class="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">
+                                            📈
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-2xl font-bold mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-pink-400 group-hover:to-orange-400 transition-all duration-300">
+                                                Digital Marketing</h3>
+                                            <p class="text-gray-400 text-sm">SEO · Performance Marketing · Branding</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 shrink-0">
+                                        <span
+                                            class="text-xs font-medium px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 group-hover:bg-white/10">4
+                                            Months</span>
+                                        <div
+                                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                            <span
+                                                class="group-hover:translate-x-1 transition-transform font-bold">→</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+
+                            <div class="course-card-wrap opacity-0 translate-y-20">
+                                <a href="#"
+                                    class="group relative bg-white/[0.02] border border-white/5 hover:border-white/20 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-500 hover:bg-white/[0.04]">
+                                    <div class="flex items-center gap-6">
+                                        <div
+                                            class="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">
+                                            📦
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-2xl font-bold mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-green-400 group-hover:to-emerald-400 transition-all duration-300">
+                                                Logistics Management</h3>
+                                            <p class="text-gray-400 text-sm">Supply Chain · Operations · ERP Systems</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 shrink-0">
+                                        <span
+                                            class="text-xs font-medium px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 group-hover:bg-white/10">3
+                                            Months</span>
+                                        <div
+                                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                            <span
+                                                class="group-hover:translate-x-1 transition-transform font-bold">→</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                        </div>
+
+                        <div class="magnetic-wrap shrink-0 self-center mt-12 reveal lg:hidden">
+                            <button data-magnetic
+                                class="px-6 py-3 rounded-full border border-white/20 hover:bg-white/10 transition-colors text-sm font-semibold flex items-center gap-2">
+                                View All Programs <span class="opacity-50">→</span>
+                            </button>
+                        </div>
+                    </div>
+
+
+                    <div class="w-full max-w-2xl flex flex-col items-center text-center mt-12">
+                        <div class="mb-8">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest reveal">Global
+                                Recognition</h3>
+                        </div>
+
+
+                        <div id="awards-stack"
+                            class="relative w-full aspect-[4/3] max-w-md mx-auto perspective-[1000px]">
+
+                            <div class="award-card absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 backdrop-blur-xl p-8 flex flex-col items-center justify-center text-center shadow-2xl origin-bottom"
+                                style="transform: translateZ(0px) rotateX(0deg);">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-white/20 flex items-center justify-center text-3xl mb-6 shadow-inner">
+                                    🌟</div>
+                                <h4
+                                    class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+                                    A Leader in Reinvention</h4>
+                            </div>
+
+
+                            <div class="award-card absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 backdrop-blur-xl p-8 flex flex-col items-center justify-center text-center shadow-2xl origin-bottom"
+                                style="transform: translateZ(-50px) translateY(5%) scale(0.95);">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-white/20 flex items-center justify-center text-3xl mb-6 shadow-inner">
+                                    🏆</div>
+                                <h4
+                                    class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+                                    A Great Place To Work®</h4>
+                            </div>
+
+
+                            <div class="award-card absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 backdrop-blur-xl p-8 flex flex-col items-center justify-center text-center shadow-2xl origin-bottom"
+                                style="transform: translateZ(-100px) translateY(10%) scale(0.9);">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-white/20 flex items-center justify-center text-3xl mb-6 shadow-inner">
+                                    🛡️</div>
+                                <h4
+                                    class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+                                    A Trusted Industry Leader</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <section class="py-40 relative flex items-center justify-center overflow-hidden" id="marquee-section">
+                <div class="whitespace-nowrap flex">
+                    <h2 id="marquee-text"
+                        class="text-[12vw] font-black tracking-tighter leading-none text-white/5 select-none pr-8">
+                        YOUR CAREER ACCELERATOR <span class="text-purple-500/10">✦</span> YOUR CAREER ACCELERATOR <span
+                            class="text-purple-500/10">✦</span> YOUR CAREER ACCELERATOR <span
+                            class="text-purple-500/10">✦</span> YOUR CAREER ACCELERATOR
+                    </h2>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center px-layer" style="--speed: -0.2px">
+                    <div class="max-w-xl text-center px-4 reveal">
+                        <p class="text-2xl md:text-3xl font-medium leading-normal">Stop wrestling with outdated
+                            curriculum.
+                            Let industry experts shape your future while you focus on learning.</p>
+                        <button
+                            class="glow-button mt-10 px-8 py-4 rounded-full text-sm font-bold transition-transform hover:scale-105 active:scale-95">
+                            Apply for Admissions
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+    </main>
+
+    <footer class="border-t border-brand-border bg-brand-dark pt-20 pb-10">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Explore</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="about.html" class="hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="itcourses.html" class="hover:text-white transition-colors">IT Courses</a></li>
+                    <li><a href="nonitcourses.html" class="hover:text-white transition-colors">Non-IT Courses</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Corporate</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="enterprise.html" class="hover:text-white transition-colors">Enterprise Training</a>
+                    </li>
+                    <li><a href="development.html" class="hover:text-white transition-colors">Software Development</a>
+                    </li>
+                    <li><a href="placements.html" class="hover:text-white transition-colors">Placements & Hiring</a>
+                    </li>
+                    <li><a href="mailto:Info@priyonix.com" class="hover:text-white transition-colors">Contact
+                            Sales</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Legal</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Statement</a></li>
+                    <li><a href="terms.html" class="hover:text-white transition-colors">Terms & Conditions</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Contact</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:info@priyonix.com"
+                            class="hover:text-white transition-colors flex items-center gap-2 "> <span
+                                class="material-symbols-outlined text-white text-sm">mail</span>
+                            info@priyonix.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:hr@priyonix.com"
+                            class="hover:text-white transition-colors flex items-center gap-2 "> <span
+                                class="material-symbols-outlined text-white text-sm">mail</span>
+                            hr@priyonix.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-center gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">phone</span>
+                            +91 7070070753</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-center gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">phone</span>
+                            +91 7070070758</a>
+                    </li>
+                    <li class="flex items-start gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-start gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">location_on</span>
+                            <span> Priyonix Global Ventures PVT. LTD. <br />
+                                Sakthi Mansion, <br />
+                                Door No:121, Plot No.74, <br />
+                                Arulananda Ammal Nagar 5th Street, <br />
+                                Don Bosco School Main Road, <br />
+                                Thanjavur - 613007</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-white/5 text-center text-xs text-gray-600">
+            © 2026 PRIYONIX GLOBAL VENTURES PRIVATE LIMITED. All rights reserved.
+        </div>
+    </footer>
+
+
+
+    <script>
+        const lenis = new Lenis({
+            duration: 1.5,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            touchMultiplier: 2,
+        });
+        let scrollY = 0;
+        let documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+        let pMouseX = 0, pMouseY = 0;
+        let mouseX = 0, mouseY = 0;
+        const root = document.documentElement;
+        const lerp = (start, end, factor) => start + (end - start) * factor;
+        const cursor = document.getElementById('custom-cursor');
+        const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        const mouse = { x: pos.x, y: pos.y };
+        const speed = 0.35;
+
+        const xSet = gsap.quickSetter(cursor, "x", "px");
+        const ySet = gsap.quickSetter(cursor, "y", "px");
+        gsap.ticker.add(() => {
+            const dt = 1.0 - Math.pow(1.0 - speed, gsap.ticker.deltaRatio());
+            pos.x += (mouse.x - pos.x) * dt;
+            pos.y += (mouse.y - pos.y) * dt;
+            xSet(pos.x);
+            ySet(pos.y);
+        });
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            pMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            pMouseY = (e.clientY / window.innerHeight) * 2 - 1;
+        });
+        const hoverElements = document.querySelectorAll('a, button, [data-magnetic]');
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        window.addEventListener('resize', () => {
+            documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+        });
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        const nav = document.querySelector('nav');
+        const magneticElements = document.querySelectorAll('[data-magnetic]');
+
+        magneticElements.forEach((el) => {
+            const wrap = el.closest('.magnetic-wrap');
+
+            wrap.addEventListener('mousemove', (e) => {
+                const rect = wrap.getBoundingClientRect();
+                const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+                const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                gsap.to(el, {
+                    x: x * 20,
+                    y: y * 20,
+                    duration: 0.4,
+                    ease: "power3.out"
+                });
+            });
+            wrap.addEventListener('mouseleave', () => {
+                gsap.to(el, {
+                    x: 0,
+                    y: 0,
+                    duration: 0.7,
+                    ease: "elastic.out(1, 0.3)"
+                });
+            });
+        });
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.to('#marquee-text', {
+            xPercent: -40,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#marquee-section",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1
+            }
+        });
+        const courseCards = document.querySelectorAll('.course-card-wrap');
+        courseCards.forEach((card) => {
+            gsap.to(card, {
+                y: 0,
+                opacity: 1,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: card,
+                    start: "top 95%",
+                    end: "top 65%",
+                    scrub: 1
+                }
+            });
+        });
+        const awards = document.querySelectorAll('.award-card');
+        const awardsStack = document.getElementById('awards-stack');
+
+        if (awards.length === 3 && awardsStack) {
+            let tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: awardsStack,
+                    start: "center center",
+                    end: "+=800",
+                    scrub: 1,
+                    pin: true,
+                    pinSpacing: true,
+                    anticipatePin: 1
+                }
+            });
+            tl.to(awards[0], {
+                z: 0,
+                xPercent: -105,
+                yPercent: 0,
+                rotationZ: -8,
+                ease: "power2.out"
+            }, 0);
+            tl.to(awards[1], {
+                z: 0,
+                y: 0,
+                scale: 1,
+                xPercent: 0,
+                yPercent: -5,
+                rotationZ: 0,
+                ease: "power2.out"
+            }, 0);
+            tl.to(awards[2], {
+                z: 0,
+                y: 0,
+                scale: 1,
+                xPercent: 105,
+                yPercent: 0,
+                rotationZ: 8,
+                ease: "power2.out"
+            }, 0);
+        }
+        const initHero = () => {
+            const heroNav = document.querySelector('nav');
+            const heroBadge = document.getElementById('hero-badge');
+            const heroLines = document.querySelectorAll('.hero-line');
+            const heroText = document.getElementById('hero-text');
+            const heroBtns = document.getElementById('hero-buttons');
+            gsap.set(heroNav, { yPercent: -100 });
+            const tl = gsap.timeline({ delay: 0.2 });
+
+            tl.to(heroNav, { yPercent: 0, duration: 1, ease: "power3.out" }, 0)
+                .to(heroBadge, { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.5)" }, 0.4)
+                .to(heroLines, {
+                    y: 0,
+                    opacity: 1,
+                    duration: 1,
+                    stagger: 0.15,
+                    ease: "expo.out"
+                }, 0.6)
+                .to(heroText, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 1.0)
+                .to(heroBtns, { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.5)" }, 1.2);
+            const rotator = document.getElementById('hero-rotator');
+            const roles = ["Tech Talent.", "Developers.", "Engineers.", "Innovators."];
+            let currentRole = 0;
+            setTimeout(() => {
+                setInterval(() => {
+                    gsap.to(rotator, {
+                        yPercent: -50,
+                        opacity: 0,
+                        duration: 0.4,
+                        ease: "power2.in",
+                        onComplete: () => {
+                            currentRole = (currentRole + 1) % roles.length;
+                            rotator.innerText = roles[currentRole];
+                            gsap.fromTo(rotator,
+                                { yPercent: 50, opacity: 0 },
+                                { yPercent: 0, opacity: 1, duration: 0.5, ease: "back.out(1.5)" }
+                            );
+                        }
+                    });
+                }, 3500);
+            }, 2000);
+        };
+        initHero();
+        setTimeout(() => {
+            const splitTexts = document.querySelectorAll('.split-text');
+
+            splitTexts.forEach(quote => {
+                const split = new SplitType(quote, { types: 'words, chars' });
+                gsap.set(quote, { opacity: 1 });
+                gsap.fromTo(split.chars,
+                    {
+                        yPercent: 100,
+                        opacity: 0
+                    },
+                    {
+                        yPercent: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        stagger: 0.02,
+                        ease: "back.out(1.2)",
+                        scrollTrigger: {
+                            trigger: quote,
+                            start: "top 90%",
+                            toggleActions: "play none none reverse"
+                        }
+                    }
+                );
+            });
+        }, 100);
+        function raf(time) {
+            lenis.raf(time);
+            scrollY = lenis.scroll;
+            const scrollProgress = documentHeight > 0 ? scrollY / documentHeight : 0;
+            mouseX = lerp(mouseX, pMouseX, 0.04);
+            mouseY = lerp(mouseY, pMouseY, 0.04);
+            root.style.setProperty('--scroll', scrollY);
+            root.style.setProperty('--progress', scrollProgress);
+            root.style.setProperty('--mouse-x', mouseX);
+            root.style.setProperty('--mouse-y', mouseY);
+            if (scrollY > 50) {
+                nav.style.backgroundColor = 'rgba(5, 5, 5, 0.8)';
+            } else {
+                nav.style.backgroundColor = 'rgba(5, 5, 5, 0)';
+            }
+            const gridEl = document.getElementById('feature-grid');
+            if (gridEl) {
+                const rect = gridEl.getBoundingClientRect();
+                const centerOffset = rect.top + (rect.height / 2) - (window.innerHeight / 2);
+                root.style.setProperty('--feature-offset', centerOffset);
+                root.style.setProperty('--feature-offset-abs', Math.abs(centerOffset));
+            }
+            if (camera && particles) {
+                camera.position.z = -scrollProgress * TUNNEL_LENGTH;
+                particles.rotation.z = scrollProgress * Math.PI;
+                const rawVelocity = Math.abs(lenis.velocity || 0);
+                const targetScaleZ = Math.min(Math.max(1 + (rawVelocity * 0.5), 1), 40);
+                if (targetScaleZ > particleScaleZ) {
+                    particleScaleZ = targetScaleZ;
+                } else {
+                    particleScaleZ = lerp(particleScaleZ, 1, 0.1);
+                }
+
+                particles.scale.z = particleScaleZ;
+                renderer.render(scene, camera);
+            }
+
+            requestAnimationFrame(raf);
+        }
+        let scene, camera, renderer, particles;
+        const PARTICLE_COUNT = 6000;
+        const TUNNEL_LENGTH = 3000;
+        const TUNNEL_RADIUS = 200;
+        let particleScaleZ = 1;
+
+        function initWebGLParticles() {
+            const container = document.getElementById('particle-canvas');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x050505, 0.001);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000);
+            camera.position.z = 0;
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(PARTICLE_COUNT * 3);
+            const sizes = new Float32Array(PARTICLE_COUNT);
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const r = 30 + Math.pow(Math.random(), 0.5) * TUNNEL_RADIUS;
+
+                const x = r * Math.cos(theta);
+                const y = r * Math.sin(theta);
+                const z = 100 - (Math.random() * (TUNNEL_LENGTH + 1000));
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                sizes[i] = Math.random() * 2;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            const canvas = document.createElement('canvas');
+            canvas.width = 16; canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.5, 'rgba(168,85,247,0.5)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 16, 16);
+            const texture = new THREE.CanvasTexture(canvas);
+
+            const material = new THREE.PointsMaterial({
+                size: 1.5,
+                map: texture,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                color: 0xffffff
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            window.addEventListener('resize', () => {
+                if (camera && renderer) {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            });
+        }
+        initWebGLParticles();
+
+        requestAnimationFrame(raf);
+    </script>
+
+    <script>
+        (function () {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-icon-path');
+            let isOpen = false;
+
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        menu.classList.remove('opacity-0', 'pointer-events-none');
+                        menu.classList.add('opacity-100', 'pointer-events-auto');
+                        icon.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        menu.classList.remove('opacity-100', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'pointer-events-none');
+                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        document.body.style.overflow = '';
+                    }
+                });
+
+                document.querySelectorAll('.mobile-link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        isOpen = false;
+                        menu.classList.remove('opacity-100', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'pointer-events-none');
+                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        document.body.style.overflow = '';
+                    });
+                });
+            }
+        })();
+    </script>
+
+</body>
+
+</html>
