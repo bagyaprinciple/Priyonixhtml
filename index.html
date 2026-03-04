@@ -297,7 +297,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 1;">
+  opacity: 1;
+  transition: visibility 0s, opacity 0.25s linear;">
         <img src="./logo.png" style="width:150px;height:150px;" />
     </div>
     <div id="container" style="visibility: hidden;
@@ -1269,7 +1270,7 @@
                 document.getElementById('loader').style.opacity = 0;
                 document.getElementById('container').style.visibility = 'visible'
                 document.getElementById('container').style.opacity = 1
-            }, 3000);
+            }, 5000);
         });
     </script>
 
