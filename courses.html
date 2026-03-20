@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Courses - Priyonix</title>
+
+
+    <script src="/scripts/tailwind.js"></script>
+    <link href="/styles/material.font.css" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="/scripts/lenis.min.js"></script>
+
+    <script src="/scripts/three.js"></script>
+
+    <script src="/scripts/gsap.js"></script>
+    <script src="/scripts/scrollTrigger.js"></script>
+
+    <script src="/scripts/split-type.js"></script>
+
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            glow: '#A855F7',
+                            dark: '#050505',
+                            card: '#111111',
+                            border: '#222222',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --scroll: 0;
+            --mouse-x: 0;
+            --mouse-y: 0;
+            --progress: 0;
+        }
+
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            cursor: none;
+        }
+
+        .px-layer {
+            will-change: transform;
+            transform: translateY(calc(var(--scroll) * var(--speed, 0.5px)));
+        }
+
+        .px-layer-x {
+            will-change: transform;
+            transform: translateX(calc(var(--scroll) * var(--speed-x, -0.5px)));
+        }
+
+        .px-mouse {
+            will-change: transform;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translate(calc(var(--mouse-x) * var(--depth, -30px)), calc(var(--mouse-y) * var(--depth, -30px)));
+        }
+
+        .glass-nav {
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-glow {
+            background: radial-gradient(circle at center, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #ffffff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glow-button {
+            position: relative;
+            background: #ffffff;
+            color: #000000;
+            isolation: isolate;
+        }
+
+        .glow-button::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(90deg, #A855F7, #EC4899, #3B82F6);
+            opacity: 0;
+            z-index: -1;
+            border-radius: 9999px;
+            transition: opacity 0.3s;
+            filter: blur(12px);
+        }
+
+        .glow-button:hover::after {
+            opacity: 0.8;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(60px) scale(0.95);
+            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .split-text {
+            opacity: 0;
+        }
+
+        .split-text .word {
+            overflow: hidden;
+            padding-bottom: 0.1em;
+        }
+
+        .split-text .char {
+            opacity: 0;
+            transform: translateY(100%);
+            will-change: transform, opacity;
+        }
+
+        .magnetic-wrap {
+            display: inline-block;
+            position: relative;
+        }
+
+        .bg-grid {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+            mix-blend-mode: overlay;
+        }
+
+        #custom-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: white;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1), height 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            will-change: transform;
+        }
+
+        #custom-cursor.hover {
+            width: 60px;
+            height: 60px;
+        }
+
+        #radios {
+            position: relative;
+            background-color: transparent;
+            z-index: 5;
+            width: 363px;
+        }
+
+        input {
+            display: none;
+        }
+
+        #bckgrnd,
+        .labels {
+            width: 160px;
+            height: 30px;
+            text-align: center;
+            display: inline-block;
+            padding-top: 3px;
+            margin-right: -3px;
+            z-index: 2;
+            cursor: pointer;
+            outline: 1px solid #ffffff60;
+        }
+
+        #rad1:checked+label,
+        #rad2:checked+label {
+            color: #000000;
+            font-weight: 700;
+        }
+
+        #bckgrnd {
+            background-color: white;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: -1;
+        }
+
+        #rad1:checked~#bckgrnd {
+            transform: translateX(0);
+            transition: transform 0.5s ease-in-out;
+        }
+
+        #rad2:checked~#bckgrnd {
+            transform: translateX(160px);
+            transition: transform 0.5s ease-in-out;
+        }
+
+
+        ul.card-stacks {
+            display: none;
+            list-style-type: none;
+            margin: 0 calc((100% - 1240px)/2) 20px;
+            padding: 0;
+            position: relative;
+            cursor: pointer;
+            height: 1800px;
+
+            li.title {
+                margin: 0 0 20px;
+
+                h2 {
+                    font-weight: 700;
+                }
+            }
+
+            li.stack {
+                position: absolute;
+                left: 0px;
+                transition: all 0.4s cubic-bezier(.63, .15, .03, 1.02);
+
+                ul.cards-down {
+                    position: relative;
+                    margin: 0 0 20px;
+                    padding: 20px;
+                    list-style-type: none;
+                    margin: 0;
+                    padding: 0;
+
+                    li.card {
+                        transition: all 0.4s cubic-bezier(.63, .15, .03, 1.22);
+                        left: 0px;
+                        transition-delay: 0.4s;
+                        overflow: hidden;
+                        height: 450px;
+                        width: 400px;
+                        border-radius: 10px;
+                        position: absolute;
+                        top: 0px;
+
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                        }
+
+                        div.content {
+                            padding: 5px 10px;
+
+                        }
+
+                        &.card-1 {
+                            z-index: 10;
+                            transform: rotateZ(-2deg);
+                        }
+
+                        &.card-2 {
+                            z-index: 9;
+                            transform: rotateZ(-7deg);
+                        }
+
+                        &.card-3 {
+                            z-index: 8;
+                            transform: rotateZ(5deg);
+                        }
+                    }
+                }
+            }
+
+            &.transition {
+                li.stack {
+                    &.stack-1 {
+                        left: 0px;
+                    }
+
+                    &.stack-2 {
+                        left: 420px;
+                    }
+
+                    &.stack-3 {
+                        left: 840px;
+                    }
+
+                    ul.cards-down {
+                        li.card {
+                            transform: rotateZ(0deg);
+
+                            &.card-1 {
+                                top: 940px;
+                            }
+
+                            &.card-2 {
+                                top: 470px;
+                            }
+
+                            &.card-3 {}
+                        }
+                    }
+                }
+            }
+        }
+
+        .blink {
+            font-size: 40px;
+            color: green;
+            animation: smooth-blink 2s infinite;
+        }
+
+        @keyframes smooth-blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.1;
+            }
+        }
+    </style>
+</head>
+
+<body class="selection:bg-brand-glow selection:text-white">
+
+
+    <div id="custom-cursor"></div>
+
+
+    <div class="film-grain">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; opacity: 1;">
+            <filter id="noiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+        </svg>
+    </div>
+
+
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div id="particle-canvas" class="fixed inset-0 pointer-events-none z-[-2]"></div>
+        <div class="absolute inset-0 bg-grid px-layer" style="--speed: 0.2px"></div>
+        <div class="px-mouse absolute top-[10%] left-[20%] w-[800px] h-[800px] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen opacity-50"
+            style="--depth: -60px;"></div>
+        <div class="px-mouse absolute bottom-[20%] right-[10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[100px] mix-blend-screen opacity-40 animate-blob delay-2000"
+            style="--depth: -30px;"></div>
+    </div>
+
+
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg   flex items-center justify-center font-bold text-white ">
+                    <img src="./logo.png" />
+                </div>
+                <span class="font-bold text-lg tracking-tight hover:text-white transition-colors">Priyonix</span>
+            </a>
+
+            <div class="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-400">
+                <a href="about.html" class="hover:text-white transition-colors">About Us</a>
+                <a href="itcourses.html"
+                    class="text-white font-semibold flex items-center gap-1 flex-col relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-white after:rounded-full">
+                    IT Courses <span
+                        class="px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-white leading-none absolute -top-3 -right-6">HOT</span>
+                </a>
+                <a href="nonitcourses.html" class="hover:text-white transition-colors">Non-IT</a>
+                <a href="enterprise.html" class="hover:text-white transition-colors">Enterprise</a>
+                <a href="development.html" class="hover:text-white transition-colors">IT Services</a>
+                <a href="placements.html" class="hover:text-white transition-colors">Placements</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="#"
+                    class="text-sm font-medium text-gray-300 hover:text-white transition-colors hidden sm:block">Apply
+                    Now</a>
+                <div class="magnetic-wrap">
+                    <button data-magnetic onclick="window.location.href='index.html#courses'"
+                        class="glow-button px-5 py-2 rounded-full text-sm font-semibold transition-transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                        View Courses <span class="opacity-50 ml-1">→</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <button id="mobile-menu-btn" class="lg:hidden text-white p-2 z-[60] relative" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path id="mobile-icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+
+    <div id="mobile-menu"
+        class="fixed inset-0 bg-[#050505]/95 backdrop-blur-xl z-[55] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="flex flex-col items-center gap-8 text-2xl font-bold text-gray-300">
+            <a href="about.html" class="hover:text-white transition-colors mobile-link">About Us</a>
+            <a href="itcourses.html" class="hover:text-white transition-colors mobile-link">IT Courses</a>
+            <a href="nonitcourses.html" class="hover:text-white transition-colors mobile-link">Non-IT</a>
+            <a href="enterprise.html" class="hover:text-white transition-colors mobile-link">Enterprise B2B</a>
+            <a href="development.html" class="hover:text-white transition-colors mobile-link">IT Services</a>
+            <a href="placements.html" class="hover:text-white transition-colors mobile-link">Placements</a>
+        </div>
+    </div>
+
+
+    <main>
+
+        <section class="max-w-[100vw] overflow-hidden py-20" id="course-roster">
+            <div class="mb-12 flex gap-6 items-center justify-center">
+                <div id="radios">
+                    <input id="rad1" type="radio" name="radioBtn" checked>
+                    <label class="labels" for="rad1">IT Courses</label>
+                    <input id="rad2" type="radio" name="radioBtn">
+                    <label class="labels" for="rad2">Non IT Courses</label>
+                    <div id="bckgrnd"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-6 items-center justify-center">
+                <div id="loader" class="blink" style="visibility: visible; 
+                        width: 100%;
+                        height: 100%; 
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        opacity: 1;
+                        transition: visibility 0s, opacity 0.25s linear;">
+                    <img src="./logo.png" style="width:150px;height:150px;" />
+                </div>
+            </div>
+
+            <ul class="card-stacks">
+                <li class="stack stack-1">
+                    <ul class="cards-down">
+                        <li class="card card-1">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="card card-2">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="card card-3">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li class="stack stack-2">
+                    <ul class="cards-down">
+                        <li class="card card-1">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="card card-2">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="card card-3">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li class="stack stack-3">
+                    <ul class="cards-down">
+                        <li class="card card-1">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="card card-2">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="card card-3">
+                            <div
+                                class="glass-panel w-[400px] h-[450px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+
+                                <div class="w-full h-[250px] bg-white/5">
+                                    <img src="./fullstack.jpg" />
+                                </div>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                </div>
+                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                    <div>
+                                        <h2 class="text-2xl font-bold mb-3">Blockchain & Web3</h2>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Solidity</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Ethereum</span>
+                                            <span
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">Web3.js</span>
+                                        </div>
+                                    </div>
+                                    <div class="magnetic-wrap self-start mt-6">
+                                        <button data-magnetic
+                                            class="glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
+                                            Explore <span class="opacity-50">→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+        </section>
+
+
+
+    </main>
+
+    <footer class="border-t border-brand-border bg-brand-dark pt-20 pb-10">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Explore</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="about.html" class="hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="itcourses.html" class="hover:text-white transition-colors">IT Courses</a></li>
+                    <li><a href="nonitcourses.html" class="hover:text-white transition-colors">Non-IT Courses</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Corporate</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="enterprise.html" class="hover:text-white transition-colors">Enterprise Training</a>
+                    </li>
+                    <li><a href="development.html" class="hover:text-white transition-colors">Software Development</a>
+                    </li>
+                    <li><a href="placements.html" class="hover:text-white transition-colors">Placements & Hiring</a>
+                    </li>
+                    <li><a href="mailto:Info@priyonix.com" class="hover:text-white transition-colors">Contact
+                            Sales</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Legal</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Statement</a></li>
+                    <li><a href="terms.html" class="hover:text-white transition-colors">Terms & Conditions</a></li>
+                    <li><a href="cancellation.html" class="hover:text-white transition-colors">Cancellation &
+                            Refund Policy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm text-white">Contact</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:info@priyonix.com"
+                            class="hover:text-white transition-colors flex items-center gap-2 "> <span
+                                class="material-symbols-outlined text-white text-sm">mail</span>
+                            info@priyonix.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:hr@priyonix.com"
+                            class="hover:text-white transition-colors flex items-center gap-2 "> <span
+                                class="material-symbols-outlined text-white text-sm">mail</span>
+                            hr@priyonix.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-center gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">phone</span>
+                            +91 7070070753</a>
+                    </li>
+                    <li class="flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-center gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">phone</span>
+                            +91 7070070758</a>
+                    </li>
+                    <li class="flex items-start gap-2 hover:text-white transition-colors">
+                        <a href="javscript:void(0)" class="hover:text-white transition-colors flex items-start gap-2 ">
+                            <span class="material-symbols-outlined text-white text-sm">location_on</span>
+                            <span> Priyonix Global Ventures PVT. LTD. <br />
+                                Sakthi Mansion, <br />
+                                Door No:121, Plot No.74, <br />
+                                Arulananda Ammal Nagar 5th Street, <br />
+                                Don Bosco School Main Road, <br />
+                                Thanjavur - 613007</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-white/5 text-center text-xs text-gray-600">
+            © 2026 PRIYONIX GLOBAL VENTURES PRIVATE LIMITED. All rights reserved.
+        </div>
+    </footer>
+
+
+    <script>
+        const lenis = new Lenis({ duration: 1.5, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), direction: 'vertical', gestureDirection: 'vertical', smooth: true });
+
+        let scrollY = 0, documentHeight = document.documentElement.scrollHeight - window.innerHeight, pMouseX = 0, pMouseY = 0, mouseX = 0, mouseY = 0;
+        const root = document.documentElement;
+        const lerp = (start, end, factor) => start + (end - start) * factor;
+
+        const cursor = document.getElementById('custom-cursor');
+        const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        const mouse = { x: pos.x, y: pos.y };
+        const speed = 0.35;
+        const xSet = gsap.quickSetter(cursor, "x", "px");
+        const ySet = gsap.quickSetter(cursor, "y", "px");
+
+        gsap.ticker.add(() => {
+            const dt = 1.0 - Math.pow(1.0 - speed, gsap.ticker.deltaRatio());
+            pos.x += (mouse.x - pos.x) * dt;
+            pos.y += (mouse.y - pos.y) * dt;
+            xSet(pos.x);
+            ySet(pos.y);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX; mouse.y = e.clientY;
+            pMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            pMouseY = (e.clientY / window.innerHeight) * 2 - 1;
+        });
+
+        document.querySelectorAll('a, button, [data-magnetic]').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        window.addEventListener('resize', () => { documentHeight = document.documentElement.scrollHeight - window.innerHeight; });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        const nav = document.querySelector('nav');
+
+        document.querySelectorAll('[data-magnetic]').forEach((el) => {
+            const wrap = el.closest('.magnetic-wrap');
+            wrap.addEventListener('mousemove', (e) => {
+                const rect = wrap.getBoundingClientRect();
+                const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+                const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                gsap.to(el, { x: x * 20, y: y * 20, duration: 0.4, ease: "power3.out" });
+            });
+            wrap.addEventListener('mouseleave', () => {
+                gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.3)" });
+            });
+        });
+        gsap.registerPlugin(ScrollTrigger);
+        const initHero = () => {
+            const tl = gsap.timeline({ delay: 0.2 });
+            tl.to(document.querySelector('nav'), { yPercent: 0, duration: 1, ease: "power3.out" }, 0)
+                .to(document.getElementById('hero-badge'), { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.5)" }, 0.4)
+                .to(document.querySelectorAll('.hero-line'), { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "expo.out" }, 0.6)
+                .to(document.getElementById('hero-text'), { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 1.0)
+                .to(document.getElementById('hero-scroll'), { opacity: 1, duration: 1, ease: "power2.inOut" }, 1.2);
+        };
+        gsap.set('nav', { yPercent: -100 });
+        initHero();
+        gsap.set('#track-1', { xPercent: 10 });
+        gsap.set('#track-2', { xPercent: -20 });
+
+        gsap.to('#track-1', {
+            xPercent: -30,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#course-roster",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1.5
+            }
+        });
+
+        gsap.to('#track-2', {
+            xPercent: 10,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#course-roster",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1.5
+            }
+        });
+        gsap.to('#marquee-text', {
+            xPercent: -40, ease: "none",
+            scrollTrigger: { trigger: "#marquee-section", start: "top bottom", end: "bottom top", scrub: 1 }
+        });
+        setTimeout(() => {
+            document.querySelectorAll('.split-text').forEach(quote => {
+                const split = new SplitType(quote, { types: 'words, chars' });
+                gsap.set(quote, { opacity: 1 });
+                gsap.fromTo(split.chars, { yPercent: 100, opacity: 0 }, {
+                    yPercent: 0, opacity: 1, duration: 0.8, stagger: 0.02, ease: "back.out(1.2)",
+                    scrollTrigger: { trigger: quote, start: "top 90%", toggleActions: "play none none reverse" }
+                });
+            });
+        }, 100);
+        function raf(time) {
+            lenis.raf(time);
+            scrollY = lenis.scroll;
+            const scrollProgress = documentHeight > 0 ? scrollY / documentHeight : 0;
+            mouseX = lerp(mouseX, pMouseX, 0.04); mouseY = lerp(mouseY, pMouseY, 0.04);
+            root.style.setProperty('--scroll', scrollY); root.style.setProperty('--progress', scrollProgress);
+            root.style.setProperty('--mouse-x', mouseX); root.style.setProperty('--mouse-y', mouseY);
+
+            nav.style.backgroundColor = scrollY > 50 ? 'rgba(5, 5, 5, 0.8)' : 'rgba(5, 5, 5, 0)';
+
+            if (camera && particles) {
+                camera.position.z = -scrollProgress * TUNNEL_LENGTH;
+                particles.rotation.z = scrollProgress * Math.PI;
+                const rawVelocity = Math.abs(lenis.velocity || 0);
+                const targetScaleZ = Math.min(Math.max(1 + (rawVelocity * 0.5), 1), 40);
+                particleScaleZ = targetScaleZ > particleScaleZ ? targetScaleZ : lerp(particleScaleZ, 1, 0.1);
+                particles.scale.z = particleScaleZ;
+                renderer.render(scene, camera);
+            }
+            requestAnimationFrame(raf);
+        }
+        let scene, camera, renderer, particles, particleScaleZ = 1;
+        const TUNNEL_LENGTH = 3000, TUNNEL_RADIUS = 200;
+        function initWebGLParticles() {
+            const container = document.getElementById('particle-canvas');
+            if (!container) return;
+            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x050505, 0.001);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000); camera.position.z = 0;
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); container.appendChild(renderer.domElement);
+            const geometry = new THREE.BufferGeometry(), positions = new Float32Array(6000 * 3), sizes = new Float32Array(6000);
+            for (let i = 0; i < 6000; i++) {
+                const theta = Math.random() * Math.PI * 2, r = 30 + Math.pow(Math.random(), 0.5) * TUNNEL_RADIUS;
+                positions[i * 3] = r * Math.cos(theta); positions[i * 3 + 1] = r * Math.sin(theta); positions[i * 3 + 2] = 100 - (Math.random() * 4000);
+                sizes[i] = Math.random() * 2;
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            const canvas = document.createElement('canvas'); canvas.width = 16; canvas.height = 16; const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8); gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(0.5, 'rgba(168,85,247,0.5)'); gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, 16, 16);
+            particles = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1.5, map: new THREE.CanvasTexture(canvas), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xffffff }));
+            scene.add(particles);
+            window.addEventListener('resize', () => { if (camera && renderer) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); } });
+        }
+        initWebGLParticles();
+        requestAnimationFrame(raf);
+
+
+        function courseContent(selected) {
+            let itCourses = [
+                {
+                    title: 'Full Stack Development'
+                }
+            ]
+            var elmt = document.getElementsByClassName('card-stacks');
+            if (elmt && elmt !== null) {
+                let content =
+                    Array.from(elmt).forEach(e => {
+                        e.style.display = 'block';
+                        document.getElementById('loader').style.display = 'none';
+                        setTimeout(() => {
+                            e.classList.add('transition');
+                        }, 200);
+                    });
+            }
+        }
+        setTimeout(() => {
+            courseContent('it')
+        }, 1000);
+    </script>
+
+    <script>
+        (function () {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-icon-path');
+            let isOpen = false;
+
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        menu.classList.remove('opacity-0', 'pointer-events-none');
+                        menu.classList.add('opacity-100', 'pointer-events-auto');
+                        icon.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        menu.classList.remove('opacity-100', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'pointer-events-none');
+                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        document.body.style.overflow = '';
+                    }
+                });
+
+                document.querySelectorAll('.mobile-link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        isOpen = false;
+                        menu.classList.remove('opacity-100', 'pointer-events-auto');
+                        menu.classList.add('opacity-0', 'pointer-events-none');
+                        icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        document.body.style.overflow = '';
+                    });
+                });
+            }
+        })();
+    </script>
+
+</body>
+
+</html>
