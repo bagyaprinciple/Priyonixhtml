@@ -828,7 +828,7 @@
 
 
     <script>
-        // const lenis = new Lenis({ duration: 1.5, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), direction: 'vertical', gestureDirection: 'vertical', smooth: true });
+        const lenis = new Lenis({ duration: 1.5, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), direction: 'vertical', gestureDirection: 'vertical', smooth: true });
 
         let scrollY = 0, documentHeight = document.documentElement.scrollHeight - window.innerHeight, pMouseX = 0, pMouseY = 0, mouseX = 0, mouseY = 0;
         const root = document.documentElement;
