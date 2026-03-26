@@ -738,7 +738,8 @@
                 </div>
             </div>
 
-            <ul id="card-stacks" class="card-stacks">
+            <ul id="card-stacks"
+                class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-6 w-full pb-20 justify-items-center">
 
             </ul>
 
@@ -1607,51 +1608,36 @@
         let selected = 'it';
 
         function createCard(courses) {
-            let content = ``;
-            content += `<li class="stack stack-1 ">
-                    <ul class="cards-down">`;
-            content += selected === 'it' ? createCardContent([courses[0], courses[1], courses[2], courses[3]]) : createCardContent([courses[0], courses[1]])
-            content += `</ul></li>`;
-
-            content += `<li class="stack stack-2 ">
-                    <ul class="cards-down">`;
-            content += selected === 'it' ? createCardContent([courses[4], courses[5], courses[6]]) : createCardContent([courses[2], courses[3]])
-            content += `</ul></li>`;
-
-            content += `<li class="stack stack-3 ">
-                    <ul class="cards-down">`;
-            content += selected === 'it' ? createCardContent([courses[7], courses[8], courses[9]]) : createCardContent([courses[4], courses[5]])
-            content += `</ul></li>`;
-            return content;
+            return createCardContent(courses);
         }
 
         function createCardContent(courses) {
             let content = '';
             courses.forEach((course, i) => {
-                content += ` <li class="card card-` + (i + 1) + `">
+                content += ` <li class="card pointer-events-auto w-full max-w-[400px]">
                             <div
-                                class="glass-panel w-[400px] h-[500px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300">
+                                class="glass-panel w-full sm:w-[400px] h-[500px] rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl relative overflow-hidden group flex flex-col justify-between shrink-0 hover:border-violet-500/50 transition-colors duration-300 mx-auto">
 
-                                <div class="w-full h-[250px] bg-white/5">
-                                    <img style='height:250px;width:100%' src="`+ course.image + `" />
+                                <div class="w-full h-[250px] bg-white/5 relative">
+                                    <img class="absolute inset-0 w-full h-full object-cover" src="`+ course.image + `" />
                                 </div>
                                 <div
-                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                    class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                                 </div>
-                                <div class="relative z-10 flex flex-col h-full justify-between p-8 ">
+                                <div class="relative z-10 flex flex-col h-full justify-between p-6 sm:p-8 ">
                                     <div>
-                                        <h2 class="text-2xl font-bold mb-3">`+ course.title + `</h2>
+                                        <h2 class="text-xl sm:text-2xl font-bold mb-3">`+ course.title + `</h2>
                                         <div class="flex flex-wrap gap-2">`;
                 course.progression.forEach(p => {
                     content += `<span
-                                                class="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-300 border border-white/10">`+ p.title + `</span>`;
+                                                class="px-2 py-1 bg-white/5 rounded text-[10px] sm:text-xs text-gray-300 border border-white/10">`+ p.title + `</span>`;
                 });
                 content += `</div>
                                     </div>
-                                    <div class="magnetic-wrap self-start mt-6">
+                                    <div class="magnetic-wrap self-start mt-6 pointer-events-auto">
                                         <button data-magnetic
                                             class="explorebutton glow-button px-5 py-2 rounded-full text-xs font-bold transition-transform flex items-center gap-2 bg-white text-black">
-                                            Konw More <span class="opacity-50">→</span>
+                                            Know More <span class="opacity-50">→</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1666,12 +1652,7 @@
                 selected = option;
                 var elmt = document.getElementById('card-stacks');
                 if (elmt && elmt !== null) {
-                    if (selected === 'it') {
-                        elmt.style.height = '2100px';
-                    }
-                    else {
-                        elmt.style.height = '1050px'
-                    }
+                    elmt.style.height = 'auto'; // Remove fixed height
                     document.getElementById('loader').style.display = 'none';
                     setTimeout(() => {
                         elmt.classList.remove('transition');
@@ -1679,7 +1660,7 @@
                 }
                 setTimeout(() => {
                     document.getElementById('card-stacks').innerHTML = '';
-                    document.getElementById('loader').style.display = 'block';
+                    document.getElementById('loader').style.display = 'flex';
                     courseContent();
                 }, 500);
             }
@@ -1687,28 +1668,25 @@
 
         function courseContent() {
             let content = '';
-            var elmt = document.getElementsByClassName('card-stacks');
+            var elmt = document.getElementById('card-stacks');
             if (elmt && elmt !== null) {
                 if (selected === 'it') {
                     content = createCard(itCourses);
                 } else {
                     content = createCard(nonItCourses);
                 }
-                document.getElementById('card-stacks').innerHTML = content;
-                Array.from(elmt).forEach(e => {
-                    e.style.display = 'block';
-                    document.getElementById('loader').style.display = 'none';
+                elmt.innerHTML = content;
+                elmt.style.display = 'grid';
+                document.getElementById('loader').style.display = 'none';
 
-                    document.getElementById('radios').style.display = 'block';
-                    setTimeout(() => {
-                        e.classList.add('transition');
-                    }, 200);
-                });
+                document.getElementById('radios').style.display = 'block';
+                setTimeout(() => {
+                    elmt.classList.add('transition');
+                    init();
+                }, 200);
+            } else {
+                init();
             }
-
-
-            // initiate the process
-            init();
         }
 
         setTimeout(() => {
