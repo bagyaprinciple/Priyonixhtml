@@ -415,7 +415,7 @@
             margin-left: auto;
             margin-right: auto;
             position: relative;
-            background: #000;
+            /* background: #000; */
             color: #fff;
             cursor: pointer;
             margin-bottom: 60px;
@@ -626,6 +626,47 @@
                 margin-top: 40px;
             }
         }
+
+        /* Extra small devices (phones, 600px and down) */
+        @media only screen and (max-width: 600px) {
+            .card-stacks {
+                margin: 5% auto !important;
+            }
+
+            .card-stacks.it {
+                height: 4700px !important;
+
+                .stack-2 {
+                    top: 1560px !important;
+                }
+
+                .stack-3 {
+                    top: 3120px !important;
+                }
+            }
+
+            .card-stacks.nonit {
+                height: 3120px !important;
+
+                .stack-1 {}
+
+                .stack-2 {
+                    top: 1040px !important;
+                }
+
+                .stack-3 {
+                    top: 2080px !important;
+                }
+            }
+
+            .stack-1,
+            .stack-2,
+            .stack-3 {
+                left: calc((100% - 400px)/2) !important;
+            }
+
+
+        }
     </style>
 </head>
 
@@ -738,7 +779,7 @@
                 </div>
             </div>
 
-            <ul id="card-stacks" class="card-stacks">
+            <ul id="card-stacks" class="card-stacks it">
 
             </ul>
 
@@ -1528,7 +1569,7 @@
             },
             {
                 title: 'Marketing & Sales',
-                image: './imgs/ai.jpg',
+                image: './imgs/marketing.jpg',
                 eligibility: "Any Degree",
                 progression: [
                     {
@@ -1663,9 +1704,11 @@
         }
 
         function selectOption(option) {
+            var elmt = document.getElementById('card-stacks');
+            elmt.classList.remove(selected);
+            elmt.classList.add(option);
             if (option !== selected) {
                 selected = option;
-                var elmt = document.getElementById('card-stacks');
                 if (elmt && elmt !== null) {
                     if (selected === 'it') {
                         elmt.style.height = '2100px';
