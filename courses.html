@@ -630,6 +630,12 @@
 
         /* Extra small devices (phones, 600px and down) */
         @media only screen and (max-width: 600px) {
+            .open-content {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+
             .card-stacks {
                 margin: 5% auto !important;
             }
@@ -1043,7 +1049,7 @@
         let itCourses = [
             {
                 title: 'Full Stack Development',
-                image: './fullstack.jpg',
+                image: './imgs/fullstack.jpg',
                 eligibility: "Basic programming knowledge preferred",
                 progression: [
                     {
@@ -1797,6 +1803,11 @@
         function attachListenerToCard(i) {
             cards[i].addEventListener('click', function (e) {
                 document.body.classList.add('overflow-hidden');
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
                 var card = getCardElement(e.target);
                 onCardClick(card, i);
             })
@@ -1857,10 +1868,6 @@
             setTimeout(function () {
                 // update the scroll position to 0 (so it is at the top of the 'opened' page)
 
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
                 // set page to open
                 pageIsOpen = true;
             }, 300);
